@@ -1,134 +1,23 @@
-import random
 import argparse
 import numpy as np
 import pandas as  pd
 from tqdm.auto import tqdm
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, T5ForConditionalGeneration, T5Tokenizer
+from transformers import pipeline
 
-from langchain.llms import OpenAI
+from langchain.llms import OpenAI, HuggingFacePipeline
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from langchain.prompts import PromptTemplate
 from langchain.llms import OpenAI
 from langchain.chains import LLMChain
 
-from templates import *
+from generate import A2CGenerator, BaseGenerator
+from evaluate import ConsistencyScorer
+from perturb import paraphrase
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-def produce_output_variations(inp, type_="sampling"): 
-    PROMPT_TEMPLATE = \
-"""
-Question: {question}
-Answer the above question in a single sentence.
-Answer:"""
-# """
-# Question: {question}
-# Answer the above question in the fewest words possible.
-# Answer:"""
-    prompt = PromptTemplate(
-            input_variables=["question"],
-            template=PROMPT_TEMPLATE,)
-    
-    outs, inp_pps = [], []
-    if type_ == "sampling":
-        for t in np.arange(0.01, 1, 0.1):
-            if args.model_name=="text-davinci-003":
-                llm = OpenAI(openai_api_key="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", top_p=0.7, temperature=t)
-                chain = LLMChain(llm=llm, prompt=prompt)
-                out = chain.run({"question":inp,})
-            else:
-                input_ids = tokenizer(PROMPT_TEMPLATE.replace("{question}", inp), return_tensors="pt").input_ids
-                out_tok = model.generate(input_ids.to(device), max_new_tokens=55, 
-                                         top_p=0.7, top_k=0, temperature=t,
-                                         do_sample=True, no_repeat_ngram_size=2,)
-                out = tokenizer.batch_decode(out_tok, skip_special_tokens=True)[0]
-                out = out.replace(PROMPT_TEMPLATE.replace("{question}", inp), '')
-            outs.append(out.strip())
-    elif type_ == "context":
-        llm = OpenAI(openai_api_key="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", top_p=0.7)
-        chain = LLMChain(llm=llm, prompt=prompt)
-        for r in range(4):
-            inp_pp = paraphrase(inp, method=r+1)
-            inp_pps.append(inp_pp)
-            if args.model_name=="text-davinci-003":
-                out = chain.run({"question":inp_pp,})
-            else:
-                input_ids = tokenizer(PROMPT_TEMPLATE.replace("{question}", inp_pp), return_tensors="pt").input_ids
-                out_tok = model.generate(input_ids.to(device), max_new_tokens=55, 
-                                         top_p=0.7, top_k=0, temperature=0.6,
-                                         do_sample=True, no_repeat_ngram_size=2,)
-                out = tokenizer.batch_decode(out_tok, skip_special_tokens=True)[0]
-                out = out.replace(PROMPT_TEMPLATE.replace("{question}", inp_pp), '')
-            outs.append(out.strip())
-    return outs, inp_pps
-
-def ans_via_comparison(inp, outs, type_="sampling"):
-#     # for all others
-#     PROMPT_TEMPLATE = \
-# """
-# Question: {question}
-# For the question above there are several options given below, choose one among them which seems to be the most correct."""
-#     PROMPT_TEMPLATE_SUFFIX = ""
-#     for i in range(len(outs)):
-#         PROMPT_TEMPLATE_SUFFIX += f"""\nOption {i+1}: {outs[i]}"""
-#     PROMPT_TEMPLATE_SUFFIX += f"""\nOption {len(outs)+1}: Don't know the correct answer"""
-#     PROMPT_TEMPLATE_SUFFIX += """\n\nAnswer:"""  
-#     PROMPT_TEMPLATE_SUFFIX = PROMPT_TEMPLATE_SUFFIX.replace('{', '{{')
-#     PROMPT_TEMPLATE_SUFFIX = PROMPT_TEMPLATE_SUFFIX.replace('}', '}}')
-    
-    # for flan-T5-xl
-    PROMPT_TEMPLATE = \
-"""
-Question: {question}
-Instruction: Choose the correct option."""
-    PROMPT_TEMPLATE_SUFFIX = ""
-    for i in range(len(outs)):
-        PROMPT_TEMPLATE_SUFFIX += f"""\n {outs[i]}"""
-    PROMPT_TEMPLATE_SUFFIX += f"""\n Don't know the correct answer"""
-    PROMPT_TEMPLATE_SUFFIX += """\n\nAnswer:"""  
-    PROMPT_TEMPLATE_SUFFIX = PROMPT_TEMPLATE_SUFFIX.replace('{', '{{')
-    PROMPT_TEMPLATE_SUFFIX = PROMPT_TEMPLATE_SUFFIX.replace('}', '}}')
-    PROMPT_TEMPLATE += PROMPT_TEMPLATE_SUFFIX
-    prompt = PromptTemplate(
-        input_variables=["question",],
-        template=PROMPT_TEMPLATE,)
-    
-    outs = []
-    if type_ == "sampling":
-        for t in np.arange(0.01, 1, 0.1):
-            if args.model_name=="text-davinci-003":
-                llm = OpenAI(openai_api_key="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", top_p=0.7, temperature=t)
-                chain = LLMChain(llm=llm, prompt=prompt)
-                out = chain.run({"question":inp})
-            else:
-                input_ids = tokenizer(PROMPT_TEMPLATE.replace("{question}", inp), return_tensors="pt").input_ids
-                out_tok = model.generate(input_ids.to(device), max_new_tokens=55, 
-                                         top_p=0.7, top_k=0, temperature=t,
-                                         do_sample=True, no_repeat_ngram_size=2,)
-                out = tokenizer.batch_decode(out_tok, skip_special_tokens=True)[0]
-                out = out.replace(PROMPT_TEMPLATE.replace("{question}", inp), '')
-            outs.append(out.strip())
-    elif type_ == "context":
-        llm = OpenAI(openai_api_key="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", top_p=0.7)
-        chain = LLMChain(llm=llm, prompt=prompt)
-        for r in range(4):
-            inp_pp = paraphrase(inp, method=r+1)
-            if args.model_name=="text-davinci-003":
-                out = chain.run({"question":inp_pp,})
-            else:
-                input_ids = tokenizer(PROMPT_TEMPLATE.replace("{question}", inp_pp), return_tensors="pt").input_ids
-                out_tok = model.generate(input_ids.to(device), max_new_tokens=55, 
-                                         top_p=0.7, top_k=0, temperature=0.6,
-                                         do_sample=True, no_repeat_ngram_size=2,)
-                out = tokenizer.batch_decode(out_tok, skip_special_tokens=True)[0]
-                out = out.replace(PROMPT_TEMPLATE.replace("{question}", inp_pp), '')
-            outs.append(out.strip())
-    return outs
-
-
 
 
 if __name__ == "__main__":
@@ -142,47 +31,85 @@ if __name__ == "__main__":
     parser.add_argument('--model_name',
                         type=str,
                         default="text-davinci-003")
+    parser.add_argument('--aux_model_name',
+                        type=str,
+                        default="text-davinci-003")
+    parser.add_argument('--openai_api_key',
+                        type=str,
+                        default="text-davinci-003")
     parser.add_argument('--perturb_type',
                         type=str,
                         choices=["paraphrasing", "sampling"],
                         default="sampling",)
+    parser.add_argument('--variation_type',
+                        type=str,
+                        choices=["paraphrasing", "sampling"],
+                        default="sampling",)
+    parser.add_argument('--gneration_strategy',
+                        type=str,
+                        choices=["a2c", "base"],
+                        default="output generation strategy to use",)
+    parser.add_argument('--eval_agreements',
+                        type=str,
+                        default="output consistency evaluation strategy to use",)
     args = parser.parse_args()
 
     df = pd.read_csv(args.input_file)
+    agreements = args.eval_agreements.split(',')
     
-    if args.model_name not in ["text-davinci-003", "gpt-3.5-turbo", "gpt-4"]:
-        if "t5" in args.model_name:
-            tokenizer = T5Tokenizer.from_pretrained(args.model_name)
-            model = T5ForConditionalGeneration.from_pretrained(args.model_name, device_map="auto")
+    if args.model_name in ["text-davinci-003", "gpt-3.5-turbo", "gpt-4"]:
+        model = OpenAI(openai_api_key=args.openai_api_key, top_p=0.7)
+    else:
+        if 't5' in args.model_name:
+            model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text2text-generation")
         else:
-            tokenizer = AutoTokenizer.from_pretrained(args.model_name)
-            model = AutoModelForCausalLM.from_pretrained(args.model_name, device_map='auto')
+            model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text-generation")
 
-    
-    all_input, all_output, all_input_pert, all_correct_output = [], [], [], [], [], []
+    if args.eval_strategy=="llm_prompting":
+        if args.aux_model_name in ["text-davinci-003", "gpt-3.5-turbo", "gpt-4"]:
+            aux_model = OpenAI(openai_api_key=args.openai_api_key, top_p=0.3)
+        else:
+            if 't5' in args.model_name:
+                aux_model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text2text-generation")
+            else:
+                aux_model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text-generation")
+
+    a2c = A2CGenerator(model, args.vars_type)
+    base = BaseGenerator(model, args.vars_type)
+    scorer = ConsistencyScorer(agreements)
+    all_input, all_output, all_output_cons, all_correct_output, all_scores, all_cons_scores = [], [], [], [], [], []
     for i in tqdm(range(len(df))):
         input = df.question[i]
         correct_output = df.best_answer[i]
         
-        input_pert = perturb.llm_prompting()
-        # outs, inp_pps = produce_output_variations(inp, type_=args.perturb_type)
-        output_pert = generate.a2c()
-        # options, cons_inp_pps = produce_output_variations(inp, type_=args.perturb_type)
-        # cons_outs = ans_via_comparison(inp, options, type_=args.perturb_type)
-        
-        all_input.extend([input]*len(input_pert))
-        all_output.extend(output_pert)
-        all_input_pert.extend([input_pert if args.perturb_type=="context" else ['']*len(input_pert)][0])
-        # all_consistent_output.extend(cons_outs)
-        # all_cons_inp_pps.extend([cons_inp_pps if args.perturb_type=="context" else ['']*len(outs)][0])
+        if args.perturb_type=="paraphrasing":
+            input_pert = [paraphrase.llm_prompting(input, idx) for idx in range(1, len(5))]
+        else:
+            input_pert = []
+            
+        # Generating Outputs
+        outputs = base.generate(input, input_pert, vars_type=args.perturb_type)
+        cons_outputs = a2c.generate(input, input_pert, vars_type=args.perturb_type)
+
+        ## Scoring Outputs
+        score = scorer.score(input, outputs)
+        cons_score = scorer.score(input, cons_outputs)
+
+        all_input.extend([input, input_pert])
+        all_output.extend(outputs)
+        all_output_cons.extend(cons_outputs)
         all_correct_output.extend([correct_output]*len(input_pert))
+
+        all_scores.extend([score]*len(outputs))
+        all_cons_scores.extend([cons_score]*len(outputs))
 
         res_df = pd.DataFrame({
             "input": all_input,
-            "input_perturb": all_input_pert,
-            "output": all_output,
-            "correct_outputs": all_correct_output,
+            "outputs_correct": all_correct_output,
+            "output_sampled": all_output,
+            "output_consistent": all_output_cons,
+            "score": all_scores,
+            "score_consistent": all_cons_scores,
         })
         
         res_df.to_csv(f"result_{args.model_name.replace('/', '')}_{args.perturb_type}", index=False)
-    res_df.to_csv(f"result_{args.model_name.replace('/', '')}_{args.perturb_type}", index=False)
