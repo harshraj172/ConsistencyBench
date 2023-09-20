@@ -39,7 +39,8 @@ class A2CGenerator(BaseGenerator):
                 outputs.append(output.strip())
         elif self.vars_type=="paraphrase":
             chain = LLMChain(llm=self.llm, prompt=choice_prompt)
-            for input_pert in inputs_pert:
+            input_perts = input + input_perts
+            for input_pert in input_perts:
                 output = chain.run({"question":input_pert,})
                 outputs.append(output.strip())
         else:

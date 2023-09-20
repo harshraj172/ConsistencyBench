@@ -67,44 +67,46 @@ if __name__ == "__main__":
 
     if args.eval_strategy=="llm_prompting":
         if args.aux_model_name in ["text-davinci-003", "gpt-3.5-turbo", "gpt-4"]:
-            aux_model = OpenAI(openai_api_key=args.openai_api_key, top_p=0.3)
+            aux_model = OpenAI(openai_api_key=args.openai_api_key, top_p=0.0)
         else:
             if 't5' in args.model_name:
-                aux_model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text2text-generation")
+                aux_model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text2text-generation", temperature=0.1)
             else:
-                aux_model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text-generation")
+                aux_model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text-generation", temperature=0.1)
 
     a2c = A2CGenerator(model, args.vars_type)
     base = BaseGenerator(model, args.vars_type)
     scorer = ConsistencyScorer(agreements)
-    all_input, all_output, all_output_cons, all_correct_output, all_scores, all_cons_scores = [], [], [], [], [], []
+    all_input, all_input_perturb, all_output, all_output_cons, all_correct_output, all_scores, all_cons_scores = [], [], [], [], [], [], []
     for i in tqdm(range(len(df))):
         input = df.question[i]
         correct_output = df.best_answer[i]
         
         if args.perturb_type=="paraphrasing":
-            input_pert = [paraphrase.llm_prompting(input, idx) for idx in range(1, len(5))]
+            input_perts = [paraphrase.llm_prompting(input, idx) for idx in range(1, len(5))]
         else:
-            input_pert = []
+            input_perts = []
             
         # Generating Outputs
-        outputs = base.generate(input, input_pert, vars_type=args.perturb_type)
-        cons_outputs = a2c.generate(input, input_pert, vars_type=args.perturb_type)
+        outputs = base.generate(input, input_perts, vars_type=args.perturb_type)
+        cons_outputs = a2c.generate(input, input_perts, vars_type=args.perturb_type)
 
         ## Scoring Outputs
         score = scorer.score(input, outputs)
         cons_score = scorer.score(input, cons_outputs)
 
-        all_input.extend([input, input_pert])
+        all_input.extend([input]*len(outputs))
+        all_input_perturb.extend([input]+input_perts) if input_perts else all_input_perturb.extend([]*len(outputs))
         all_output.extend(outputs)
         all_output_cons.extend(cons_outputs)
-        all_correct_output.extend([correct_output]*len(input_pert))
+        all_correct_output.extend([correct_output]*len(outputs))
 
         all_scores.extend([score]*len(outputs))
         all_cons_scores.extend([cons_score]*len(outputs))
 
         res_df = pd.DataFrame({
             "input": all_input,
+            "input_pert": all_input_perturb,
             "outputs_correct": all_correct_output,
             "output_sampled": all_output,
             "output_consistent": all_output_cons,

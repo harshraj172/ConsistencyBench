@@ -1,0 +1,15 @@
+datasets==2.14.3
+evaluate==0.4.0
+langchain==0.0.103
+openai==0.27.1
+pandas==2.0.2
+evaluate==0.4.0
+accelerate==0.20.3
+numpy==1.25.0
+tqdm==4.65.0
+torch >=1.9.0
+transformers==4.30.2
+tokenizers>=0.13.3
+accelerate==0.20.3
+bert-score==0.3.13
+en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl
