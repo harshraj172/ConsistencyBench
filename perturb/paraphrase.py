@@ -2,7 +2,7 @@ from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 
-from prompt_template import * 
+from .prompt_template import * 
 
 def llm_prompting(input, method=1):
     pp_prompt = PromptTemplate(

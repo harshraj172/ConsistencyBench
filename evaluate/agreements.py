@@ -6,17 +6,17 @@ from langchain.llms import HuggingFacePipeline
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
-from prompt_templates import *
+from .prompt_template import *
 
 class PP_Detector():
     def __init__(self, tok_path="domenicrosati/deberta-v3-large-finetuned-paws-paraphrase-detector", model_path="domenicrosati/deberta-v3-large-finetuned-paws-paraphrase-detector", max_len=30):
         super(PP_Detector, self).__init__()
         self.detection_tokenizer = AutoTokenizer.from_pretrained(tok_path)
         self.detection_model = AutoModelForSequenceClassification.from_pretrained(model_path)
-        self.detection_model.to(device)
+        self.detection_model.to('cuda')
 
     def score_binary(self, y_1, y_2):
-        inputs = self.detection_tokenizer(y_1, y_2, return_tensors="pt", padding=True).to(device)
+        inputs = self.detection_tokenizer(y_1, y_2, return_tensors="pt", padding=True).to('cuda')
         outputs = self.detection_model(**inputs)
         scores = outputs.logits.softmax(dim=-1)
         # Return probabilites and scores for not paraphrase and paraphrase
@@ -36,24 +36,24 @@ class NLI():
         super(NLI, self).__init__()
         self.detection_tokenizer = AutoTokenizer.from_pretrained(tok_path)
         self.detection_model = AutoModelForSequenceClassification.from_pretrained(model_path)
-        self.detection_model.to(device)
+        self.detection_model.to('cuda')
 
     def entailed(self, y_1, y_2):
-        inputs = self.detection_tokenizer(y_1, y_2, return_tensors="pt", padding=True).to(device)
+        inputs = self.detection_tokenizer(y_1, y_2, return_tensors="pt", padding=True).to('cuda')
         outputs = self.detection_model(**inputs)
         scores = outputs.logits.softmax(dim=-1)
         return scores.T[2].item()
 
     def contradicted(self, y_1, y_2):
-        inputs = self.detection_tokenizer(y_1, y_2, return_tensors="pt", padding=True).to(device)
+        inputs = self.detection_tokenizer(y_1, y_2, return_tensors="pt", padding=True).to('cuda')
         outputs = self.detection_model(**inputs)
         scores = outputs.logits.softmax(dim=-1)
         return scores.T[0].item()
     
 
-class SemanticAgreement():
-    def __init__(self, agreement_name):
-        super(SemanticAgreement, self).__init__()
+class Agreement():
+    def __init__(self, agreement_name, aux_model):
+        super(Agreement, self).__init__()
         if agreement_name.lower()=="bleu":
             self.bleu = evaluate.load("bleu")
             self.agreement_fn = self.bleu_agreement
@@ -61,7 +61,7 @@ class SemanticAgreement():
             self.bertscore = evaluate.load("bertscore")
             self.agreement_fn = self.bertscore_agreement
         elif agreement_name.lower()=="paraphrase_detector":
-            self.pp_detector = PP_Detector(tok_path, model_path)
+            self.pp_detector = PP_Detector()
             self.agreement_fn = self.pp_agreement
         elif agreement_name.lower()=="entailment":
             self.nli = NLI()
@@ -73,20 +73,21 @@ class SemanticAgreement():
             self.NER = spacy.load("en_core_web_sm")
             self.agreement_fn = self.ner_agreement
         elif agreement_name.lower()=="llm":
-            pipe = pipeline(model="google/flan-t5-xl", device_map="auto")
-            llm = HuggingFacePipeline(pipeline=pipe)
+            # pipe = pipeline(model="google/flan-t5-xl", device_map="auto")
+            # llm = HuggingFacePipeline(pipeline=pipe)
             # step 1
             prompt_eval_step1 = PromptTemplate(
                     input_variables=["context", "question"],
                     template=EVAL_STEP1_TEMPLATE,)
-            self.chain_step1 = LLMChain(llm=llm, prompt=prompt_eval_step1)    
+            self.chain_step1 = LLMChain(llm=aux_model, prompt=prompt_eval_step1)    
             self.chain_step1.verbose = False    
             # step 2
             prompt_eval_step2 = PromptTemplate(
                     input_variables=["question", "answer1", "answer2"],
                     template=EVAL_STEP2_TEMPLATE,)
-            self.chain_step2 = LLMChain(llm=llm, prompt=prompt_eval_step2)    
+            self.chain_step2 = LLMChain(llm=aux_model, prompt=prompt_eval_step2)    
             self.chain_step2.verbose = False
+            self.agreement_fn = self.llm_agreement
 
     def bleu_agreement(self, input, output_i, output_j):
         if not output_i:

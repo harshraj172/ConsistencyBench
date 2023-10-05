@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import entropy
 
-from agreements import Agreement
+from .agreements import Agreement
 
 def semantic_clustering(inp, outs, agreement_fn, threshold=0.5,):
     
@@ -22,10 +22,11 @@ def semantic_clustering(inp, outs, agreement_fn, threshold=0.5,):
 
 
 class ConsistencyScorer:
-    def __init__(self, agreements_list, scoring_type=""):
+    def __init__(self, agreements_list, scoring_type, aux_model):
         super(ConsistencyScorer, self).__init__()
         self.agreements_list = agreements_list
         self.scoring_type = scoring_type
+        self.aux_model = aux_model
         
     def entropy_score(self, input, outputs, agreement_fn, threshold, _):
         # TODO
@@ -36,13 +37,13 @@ class ConsistencyScorer:
         H = entropy(pk, base=2)
         return H
     
-    def pairwise_score(self, outputs, agreement_fn, threshold, binary=True):
+    def pairwise_score(self, input, outputs, agreement_fn, threshold, binary=True):
         agreements = 0
         for i, output_i in enumerate(outputs):
             for j, output_j in enumerate(outputs):
                 if i == j:
                     continue
-                agreement_score = agreement_fn(output_i, output_j)
+                agreement_score = agreement_fn(input, output_i, output_j)
                 if binary and agreement_score >= threshold:
                     agreements += 1
                 elif binary == False:
@@ -61,7 +62,7 @@ class ConsistencyScorer:
         
         con_scores = {}
         for name, threshold in self.agreements_list:
-            fn = Agreement(name)
+            fn = Agreement(name, self.aux_model).agreement_fn
             print('Getting score for ', name)
             con_scores[name] = scorer(input, outputs, fn, threshold, False)
         return con_scores

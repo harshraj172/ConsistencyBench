@@ -1,9 +1,9 @@
 import numpy as np
 from langchain.prompts import PromptTemplate
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 
-from prompt_template import QUESTION_TEMPLATE
+from .prompt_template import QUESTION_TEMPLATE
 
 class BaseGenerator():
     def __init__(self, model, vars_type):
@@ -14,14 +14,14 @@ class BaseGenerator():
                 input_variables=["question"],
                 template=QUESTION_TEMPLATE,)
     
-    def apply(input, inputs_pert, outputs):
+    def apply(self, input, inputs_pert, outputs):
         return outputs
     
-    def generate(self, input, inputs_pert):
+    def generate(self, input, input_perts):
         outputs = []
         if self.vars_type=="sampling":
-            for temperature in np.arange(0, 2.5, 0.25):
-                self.model.pipeline_kwargs["temperature"] = temperature
+            for temperature in np.arange(0, 2, 0.2):
+                self.model.model_kwargs['temperature'] = temperature
                 chain = LLMChain(llm=self.model, prompt=self.question_prompt)
                 output = chain.run({"question":input,})
                 outputs.append(output.strip())
