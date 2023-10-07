@@ -9,7 +9,6 @@ from transformers import pipeline
 
 from langchain.llms import HuggingFacePipeline
 from langchain.chat_models import ChatOpenAI
-from langchain.chat_models import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage, AIMessage
 from langchain.prompts import PromptTemplate
 from langchain.llms import OpenAI
@@ -40,10 +39,6 @@ if __name__ == "__main__":
                         default="gpt-3.5-turbo")
     parser.add_argument('--openai_api_key',
                         type=str,)
-    parser.add_argument('--perturb_type',
-                        type=str,
-                        choices=["paraphrasing", "sampling"],
-                        default="sampling",)
     parser.add_argument('--scoring_type',
                         type=str,
                         choices=["entropy", "pairwise"],
@@ -51,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument('--variation_type',
                         type=str,
                         choices=["paraphrasing", "sampling"],
-                        default="sampling",)
+                        default="paraphrasing",)
     parser.add_argument('--eval_agreements',
                         default='llm,0.5;contradiction,0.5;ner,0.5',
                         type=str,
@@ -63,27 +58,35 @@ if __name__ == "__main__":
         df = data['validation'].to_pandas()
     else:
         NotImplementedError
-    agreements = [tuple(x.split(',')) for x in args.eval_agreements.split(';')]
+    agreements = [(x.split(',')[0], float(x.split(',')[1])) for x in args.eval_agreements.split(';')]
     
     if args.model_name in ["gpt-3.5-turbo", "gpt-4"]:
-        model = ChatOpenAI(model_name=args.model_name, openai_api_key=args.openai_api_key, top_p=0.5)
+        model = ChatOpenAI(model_name=args.model_name, 
+                           openai_api_key=args.openai_api_key, 
+                           model_kwargs={"temperature": 0.1}, max_tokens=100)
     else:
-        if 't5' in args.model_name:
-            model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text2text-generation")
-        else:
-            model = HuggingFacePipeline.from_model_id(model_id=args.model_name, task="text-generation")
+        task = "text2text-generation" if 't5' in args.model_name else "text-generation"
+        model = HuggingFacePipeline.from_model_id(
+            model_id=args.model_name,
+            task=task,
+            device=0, 
+            model_kwargs={"temperature": 0.1, "max_length": 100},
+        )
 
     aux_model = None
     if 'llm' in [x for x, _ in agreements]:
         if args.aux_model_name in ["gpt-3.5-turbo", "gpt-4"]:
-            aux_model = ChatOpenAI(model_name=args.aux_model_name, openai_api_key=args.openai_api_key, top_p=0.0)
+            model = ChatOpenAI(model_name=args.aux_model_name, 
+                               openai_api_key=args.openai_api_key, 
+                               model_kwargs={"temperature": 0.1}, max_tokens=100)
         else:
-            if 't5' in args.aux_model_name:
-                pipe = pipeline(model=args.aux_model_name, task="text2text-generation", temperature=0.1, device_map="auto")
-                aux_model = HuggingFacePipeline(pipeline=pipe)
-            else:
-                pipe = pipeline(model=args.aux_model_name, task="text-generation", temperature=0.1, device_map="auto")
-                aux_model = HuggingFacePipeline(pipeline=pipe)
+            task = "text2text-generation" if 't5' in args.aux_model_name else "text-generation"
+            aux_model = HuggingFacePipeline.from_model_id(
+                model_id=args.aux_model_name,
+                task=task,
+                device=0, 
+                model_kwargs={"temperature": 0.1, "max_length": 100},
+            )
 
     a2c = A2CGenerator(model, args.variation_type)
     base = BaseGenerator(model, args.variation_type)
@@ -93,27 +96,39 @@ if __name__ == "__main__":
         input = df.question[i]
         correct_output = df.best_answer[i]
         
-        if args.perturb_type=="paraphrasing":
-            input_perts = [paraphrase.llm_prompting(input, idx) for idx in range(1, len(5))]
+        if args.variation_type=="paraphrasing":
+            input_perts = [paraphrase.llm_prompting(input, args.openai_api_key, method=idx) for idx in range(1, 5)]
         else:
             input_perts = []
-    
+        print('input_perts =', input_perts)
+        
         # Generating Outputs
         outputs = base.generate(input, input_perts)
+        print('outputs =', outputs)
         cons_outputs = a2c.generate(input, input_perts)
+        print('cons_outputs =', cons_outputs)
 
         ## Scoring Outputs
         score = scorer.score(input, outputs)
+        print('score =', score)
         cons_score = scorer.score(input, cons_outputs)
+        print('cons_score =', cons_score)
 
         all_input.extend([input]*len(outputs))
         all_input_perturb.extend([input]+input_perts) if input_perts else all_input_perturb.extend(['']*len(outputs))
         all_output.extend(outputs)
         all_output_cons.extend(cons_outputs)
         all_correct_output.extend([correct_output]*len(outputs))
+
         all_scores.extend([score]*len(outputs))
         all_cons_scores.extend([cons_score]*len(outputs))
-        
+        print('all_input =', len(all_input))
+        print('all_input_perturb =', len(all_input_perturb))
+        print('all_output =', len(all_output))
+        print('all_output_cons =', len(all_output_cons))
+        print('all_correct_output =', len(all_correct_output))
+        print('all_scores =', len(all_scores))
+        print('all_cons_scores =', len(all_cons_scores))
         res_df = pd.DataFrame({
             "input": all_input,
             "input_pert": all_input_perturb,
@@ -124,4 +139,4 @@ if __name__ == "__main__":
             "score_consistent": all_cons_scores,
         })
         
-        res_df.to_csv(f"result_{args.model_name.replace('/', '')}_{args.perturb_type}.csv", index=False)
+        res_df.to_csv(f"result_{args.model_name.replace('/', '')}_{args.variation_type}.csv", index=False)

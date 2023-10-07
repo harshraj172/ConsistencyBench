@@ -8,9 +8,9 @@ from .prompt_template import QUESTION_TEMPLATE
 from .base import BaseGenerator
 
 class A2CGenerator(BaseGenerator):
-    def __init__(self, model, vars_type):
-        super(A2CGenerator, self).__init__(model, vars_type)
-        self.vars_type = vars_type
+    def __init__(self, model, variation_type):
+        super(A2CGenerator, self).__init__(model, variation_type)
+        self.variation_type = variation_type
         self.model = model
         self.question_prompt = PromptTemplate(
                 input_variables=["question"],
@@ -31,15 +31,14 @@ class A2CGenerator(BaseGenerator):
             template=CHOICE_TEMPLATE,)
         
         outputs = []
-        if self.vars_type=="sampling":
+        if self.variation_type=="sampling":
             for temperature in np.arange(0, 2, 0.2):
                 self.model.model_kwargs["temperature"] = temperature
                 chain = LLMChain(llm=self.model, prompt=choice_prompt)
                 output = chain.run({"question":input,})
                 outputs.append(output.strip())
-        elif self.vars_type=="paraphrase":
-            chain = LLMChain(llm=self.llm, prompt=choice_prompt)
-            input_perts = input + input_perts
+        elif self.variation_type=="paraphrasing":
+            chain = LLMChain(llm=self.model, prompt=choice_prompt)
             for input_pert in input_perts:
                 output = chain.run({"question":input_pert,})
                 outputs.append(output.strip())
