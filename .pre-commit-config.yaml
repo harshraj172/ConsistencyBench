@@ -1,0 +1,84 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+        exclude: '^html-cob|^htmlcov|^junit|test-output.xml'
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: name-tests-test
+    -   id: check-merge-conflict
+    -   id: check-added-large-files
+        args: ['--maxkb=1000']
+        exclude: "notebooks"
+    -   id: check-yaml
+        exclude: "mkdocs.yml"
+#    -   id: double-quote-string-fixer
+#    -   id: requirements-txt-fixer
+    exclude:
+        - "./html-cob/*"
+        - "./htmlcov/*"
+        - "./junit/*"
+
+#  - repo: https://github.com/pre-commit/mirrors-poetry
+#    rev: v1.1.7  # Replace with the latest version
+#    hooks:
+#      - id: poetry-check
+#      - id: poetry-lock
+##      - id: poetry-export # enable this if we want to have requirements.txt
+
+  - repo: https://github.com/psf/black
+    rev: 23.9.1
+    hooks:
+      - id: black
+        exclude:
+          "setup-poetry.py"
+
+
+#  - repo: https://github.com/asottile/reorder-python-imports
+#    rev: v3.10.0
+#    hooks:
+#    -   id: reorder-python-imports
+#        exclude: ^(pre_commit/resources/|testing/resources/python3_hooks_repo/)
+#        args: [--py38-plus, --add-import, 'from __future__ import annotations']
+
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.5.1
+    hooks:
+      - id: mypy
+        exclude:
+          "setup-poetry.py"
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.1.0
+    hooks:
+    -   id: flake8
+        config_file: .flake8
+
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
+      - id: pydocstyle
+        args: [--match='.*\.py$']
+        exclude:
+          "setup-poetry.py"
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: '1.7.5'
+    hooks:
+      - id: bandit
+        args: [ "-c", "pyproject.toml" ]
+        additional_dependencies: [ "bandit[toml]" ]
+        exclude:
+          "setup-poetry.py"
+
+#  - repo: local
+#    hooks:
+#    -   id: run-tests
+#        language: script
+#        name: Run tests
+#        entry: ./run_tests.sh
+#        stages:
+#          - commit

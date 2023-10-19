@@ -1,0 +1,82 @@
+[tool.poetry]
+name = "consistencybench"
+version = "0.1"
+description = "Tools and Techniques for Consistency Benchmarking"
+authors = ["Harsh Raj <>, Vipul Gupta <>, Domenic Rosati <>, Subho Majumdar <>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<4.0" # TODO: confirm
+datasets = "2.14.3"
+evaluate= "0.4.0"
+langchain= "0.0.103"
+openai= "0.27.1"
+pandas = "2.0.2"
+accelerate = "0.20.3"
+numpy = "1.25.0"
+tqdm = "4.65.0"
+torch = ">=1.9.0"
+transformers = "4.30.2"
+tokenizers = ">=0.13.3"
+bert-score = "0.3.13"
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0-py3-none-any.whl"}
+
+[tool.poetry.group.dev.dependencies]
+coverage = "^7.2.7"
+pytest = "^7.4.0"
+flake8 = "^6.0.0"
+black = "^23.7.0"
+pre-commit = "^3.3.3"
+pytest-cov = "^4.1.0"
+pytest-azurepipelines = "^1.0.4"
+pycobertura = "^3.2.1"
+poethepoet = "^0.21.1"
+bandit = "^1.7.5"
+mkdocs = "^1.5.0"
+mkdocstrings = {extras = ["python"], version = "^0.22.0"}
+mkdocs-material = "^9.1.20"
+twine = ">=4.0.2"
+requests = ">=2.31.0"
+build = ">=0.10.0"
+keyring = ">=24.2.0"
+artifacts-keyring = ">=0.3.3"
+setuptools = ">=68.0.0"
+
+[tool.black]
+line_length = 88
+
+[tool.flake8]
+line_length = 120
+
+[tool.mypy]
+
+[tool.coverage]
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+
+[tool.poe.tasks]
+# Tests
+# unit-tests = "pytest tests/"
+# unit-test-with-env-file = "pytest tests/ -s --envfile tests/test.env"
+# Code coverage
+# test-coverage-report-azure = [
+#     { cmd = "python -m pytest -v -o junit_family=xunit2 --junitxml=junit/test-results.xml --cov --cov-fail-under=70 --cov-report=xml:pytest-cobertura.xml --cov-report=html --no-coverage-upload"},
+#     { cmd = "pycobertura show --format html --output html-cob/index.html coverage.xml"}
+# ]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+#tests = ["B201", "B301"]
+#skips = ["B101", "B601"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
