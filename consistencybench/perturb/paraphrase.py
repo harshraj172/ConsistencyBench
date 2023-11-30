@@ -6,6 +6,17 @@ from .prompt_template import *
 
 
 def llm_prompting(input, openai_api_key, method=1):
+    """
+    Generate a paraphrase from input text using a language model (LM) based on a specified template.
+
+    Args:
+        input_text (str): The text to be processed.
+        openai_api_key (str): API key for accessing OpenAI's language model.
+        method (int, optional): The method number to be used for processing. Default is 1.
+
+    Returns:
+        str: The processed text output from the language model.
+    """
     pp_prompt = PromptTemplate(
         input_variables=["method", "sentence"],
         template=PP_TEMPLATE,

@@ -9,7 +9,22 @@ from .base import BaseGenerator
 
 
 class A2CGenerator(BaseGenerator):
+    """
+    A specialized generator class extending BaseGenerator, designed to create 
+    multiple choice options based on input variations.
+
+    Inherits from:
+        BaseGenerator: The base class for generating output variations.
+    """
+    
     def __init__(self, model, variation_type):
+        """
+        Initializes the A2CGenerator with the given model and variation type.
+
+        Args:
+            model (Model): The language model to use.
+            variation_type (str): The method of variation to apply ('sampling' or 'paraphrasing').
+        """
         super(A2CGenerator, self).__init__(model, variation_type)
         self.variation_type = variation_type
         self.model = model
@@ -19,6 +34,17 @@ class A2CGenerator(BaseGenerator):
         )
 
     def apply(self, input, input_perts, outputs):
+        """
+        Extends the apply method to create a multiple-choice format for each output.
+
+        Args:
+            input (str): The original input.
+            input_perts (list): Perturbed versions of the input.
+            outputs (list): Generated outputs to be transformed into multiple-choice format.
+
+        Returns:
+            list: Outputs formatted as multiple-choice questions.
+        """
         from .prompt_template import CHOICE_TEMPLATE
 
         CHOICE_TEMPLATE_SUFFIX = ""
