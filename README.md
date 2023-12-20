@@ -14,5 +14,9 @@ pip install -r requirements.txt
 Set the arguments from `run_eval.py`
 
 ```bash
-python run_eval.py --openai_api_key OPENAI_API_KEY
+python run_eval.py --openai_api_key <OPENAI_API_KEY>
 ```
+
+**Example Output file**: `consistencybench/result_gpt-3.5-turbo_paraphrasing.csv`
+
+**Example Jupyter Notebook**: `example.ipynb`

@@ -33,7 +33,7 @@ def semantic_clustering(
 
     Example:
     >>> semantic_clustering(input_item, list_of_items, similarity_function)
-    [[item1, item2], [item3], [item4, item5, item6]]
+    >>> [[item1, item2], [item3], [item4, item5, item6]]
     """
     C = [[outs[0]]]
     outs = outs[1:]
