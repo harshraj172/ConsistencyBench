@@ -84,6 +84,9 @@ paredown_data/*
 profile_default/
 ipython_config.py
 
+# poetry
+poetry.lock
+
 # pyenv
 .python-version
 

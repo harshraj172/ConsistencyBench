@@ -1,44 +1,43 @@
-import numpy as np
 import spacy
 import evaluate
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
-from langchain.llms import HuggingFacePipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
-from .prompt_template import *
+from .prompt_template import EVAL_STEP1_TEMPLATE, EVAL_STEP2_TEMPLATE
 
 
 class PP_Detector:
     """
-    This class implements a Paraphrase Detector using a fine-tuned model. 
-    It serves to assess if two given text segments are paraphrases of each other. 
+    This class implements a Paraphrase Detector using a fine-tuned model.
+    It serves to assess if two given text segments are paraphrases of each other.
     The model outputs a score between 0 and 1, indicating the likelihood of the inputs being paraphrases.
 
     Attributes:
-        detection_tokenizer (AutoTokenizer): Tokenizer from the HuggingFace library, 
+        detection_tokenizer (AutoTokenizer): Tokenizer from the HuggingFace library,
                                              initialized from a pre-trained model specified by `tok_path`.
-        detection_model (AutoModelForSequenceClassification): Model from the HuggingFace library, 
+        detection_model (AutoModelForSequenceClassification): Model from the HuggingFace library,
                                                               fine-tuned for paraphrase detection,
                                                               loaded from `model_path`.
-    
+
     Methods:
         __init__(tok_path, model_path, max_len): Initializes the Paraphrase Detector.
         score_binary(y_1, y_2): Calculates the paraphrase probability scores for two input sentences.
 
     Parameters:
-        tok_path (str): Path or identifier for the tokenizer to be used. 
+        tok_path (str): Path or identifier for the tokenizer to be used.
                         Default is set to "domenicrosati/deberta-v3-large-finetuned-paws-paraphrase-detector".
-        model_path (str): Path or identifier for the model to be used. 
+        model_path (str): Path or identifier for the model to be used.
                           Mirrors the default of `tok_path`.
         max_len (int): Maximum length of the tokenized input. Default value is 30.
-    
+
     Example:
         detector = PP_Detector()
         score_no_para, score_para = detector.score_binary("This is a sentence.", "This is another sentence.")
         # `score_no_para` represents the probability of the inputs not being paraphrases,
         # while `score_para` represents the probability of them being paraphrases.
     """
+
     def __init__(
         self,
         tok_path="domenicrosati/deberta-v3-large-finetuned-paws-paraphrase-detector",
@@ -128,11 +127,12 @@ class Agreement:
     The Agreement class is designed to assess the similarity or agreement between two text outputs.
     It supports various evaluation metrics such as BLEU, BERTScore, paraphrase detection, entailment,
     contradiction, named entity recognition (NER), and large language model (LLM) based comparison.
-    
+
     Parameters:
     agreement_name (str): The name of the agreement metric to use.
     aux_model: An auxiliary model required for certain agreement metrics, particularly LLM.
     """
+
     def __init__(self, agreement_name, aux_model):
         super(Agreement, self).__init__()
         if agreement_name.lower() == "bleu":
@@ -282,7 +282,7 @@ class Agreement:
     def llm_agreement(self, input, output_i, output_j):
         """
         Utilizes a large language model (LLM) to assess the agreement between two outputs based on a specific input.
-        This method involves two steps: first, it uses the LLM to process each output with the input; 
+        This method involves two steps: first, it uses the LLM to process each output with the input;
         second, it compares the LLM-processed outputs to determine if they are in agreement.
 
         Parameters:

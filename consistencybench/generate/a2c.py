@@ -10,13 +10,13 @@ from .base import BaseGenerator
 
 class A2CGenerator(BaseGenerator):
     """
-    A specialized generator class extending BaseGenerator, designed to create 
+    A specialized generator class extending BaseGenerator, designed to create
     multiple choice options based on input variations.
 
     Inherits from:
         BaseGenerator: The base class for generating output variations.
     """
-    
+
     def __init__(self, model, variation_type):
         """
         Initializes the A2CGenerator with the given model and variation type.

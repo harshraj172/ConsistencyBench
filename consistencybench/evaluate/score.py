@@ -13,22 +13,22 @@ def semantic_clustering(
     """
     Organizes similar items from a list into clusters based on a similarity threshold.
 
-    This function takes a list of items ('outs') and groups them into clusters. 
-    Each cluster contains items that are similar to each other based on a given similarity 
-    measure ('agreement_fn'). The similarity is compared to a specified threshold to 
+    This function takes a list of items ('outs') and groups them into clusters.
+    Each cluster contains items that are similar to each other based on a given similarity
+    measure ('agreement_fn'). The similarity is compared to a specified threshold to
     determine if items belong in the same cluster.
 
     Parameters:
     - inp: A reference input that is used by the 'agreement_fn' to compare against items in 'outs'.
     - outs: A list of items to be clustered.
-    - agreement_fn: A function that measures similarity between 'inp' and each item in 'outs', 
+    - agreement_fn: A function that measures similarity between 'inp' and each item in 'outs',
                     and between items within 'outs'. It should return a similarity score.
-    - threshold (optional): A float value representing the minimum similarity score required 
-                            for items to be considered as part of the same cluster. 
+    - threshold (optional): A float value representing the minimum similarity score required
+                            for items to be considered as part of the same cluster.
                             Default value is 0.5.
 
     Returns:
-    - A list of clusters, where each cluster is a list of items from 'outs' that are similar 
+    - A list of clusters, where each cluster is a list of items from 'outs' that are similar
       to each other as per the 'agreement_fn' and above the 'threshold' value.
 
     Example:
@@ -66,7 +66,7 @@ class ConsistencyScorer:
     - pairwise_score: Calculates the pairwise score for a given set of outputs.
     - score: Calculates the consistency score based on the specified scoring type.
     """
-    
+
     def __init__(self, agreements_list, scoring_type, aux_model):
         """
         Initializes the ConsistencyScorer with necessary parameters.

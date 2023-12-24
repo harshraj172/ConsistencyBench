@@ -15,7 +15,7 @@ class BaseGenerator:
         model (Model): The language model used for generating outputs.
         question_prompt (PromptTemplate): Template for formatting the input question.
     """
-    
+
     def __init__(self, model, variation_type):
         """
         Initializes the BaseGenerator with a specified model and variation type.
