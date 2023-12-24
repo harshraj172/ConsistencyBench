@@ -78,7 +78,7 @@ target/
 # Data
 DATA/*
 paredown_data/*
-*.ipynb
+# *.ipynb
 
 # IPython
 profile_default/

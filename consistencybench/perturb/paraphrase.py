@@ -5,13 +5,12 @@ from langchain.schema import HumanMessage
 from .prompt_template import *
 
 
-def llm_prompting(input, openai_api_key, method=1):
+def llm_prompting(input, method=1):
     """
     Generate a paraphrase from input text using a language model (LM) based on a specified template.
 
     Args:
         input_text (str): The text to be processed.
-        openai_api_key (str): API key for accessing OpenAI's language model.
         method (int, optional): The method number to be used for processing. Default is 1.
 
     Returns:
@@ -21,7 +20,7 @@ def llm_prompting(input, openai_api_key, method=1):
         input_variables=["method", "sentence"],
         template=PP_TEMPLATE,
     )
-    llm = ChatOpenAI(openai_api_key=openai_api_key, model_name="gpt-3.5-turbo")
+    llm = ChatOpenAI(model_name="gpt-3.5-turbo")
     messages = [
         HumanMessage(content=pp_prompt.format(method=str(method), sentence=input))
     ]

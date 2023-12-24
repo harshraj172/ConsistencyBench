@@ -1,3 +1,4 @@
+import os
 import argparse
 import numpy as np
 import pandas as pd
@@ -58,7 +59,9 @@ if __name__ == "__main__":
         help="output consistency evaluation strategy to use",
     )
     args = parser.parse_args()
-
+    
+    os.environ['OPENAI_API_KEY'] = args.openai_api_key
+    
     if args.data_name == "truthful_qa":
         data = load_dataset("truthful_qa", "generation")
         df = data["validation"].to_pandas()
@@ -88,7 +91,7 @@ if __name__ == "__main__":
     aux_model = None
     if "llm" in [x for x, _ in agreements]:
         if args.aux_model_name in ["gpt-3.5-turbo", "gpt-4"]:
-            model = ChatOpenAI(
+            aux_model = ChatOpenAI(
                 model_name=args.aux_model_name,
                 openai_api_key=args.openai_api_key,
                 model_kwargs={"temperature": 0.1},
@@ -125,7 +128,7 @@ if __name__ == "__main__":
 
         if args.variation_type == "paraphrasing":
             input_perts = [
-                paraphrase.llm_prompting(input, args.openai_api_key, method=idx)
+                paraphrase.llm_prompting(input, method=idx)
                 for idx in range(1, 5)
             ]
         else:

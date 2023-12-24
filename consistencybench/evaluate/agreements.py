@@ -171,6 +171,8 @@ class Agreement:
             self.chain_step2 = LLMChain(llm=aux_model, prompt=prompt_eval_step2)
             self.chain_step2.verbose = False
             self.agreement_fn = self.llm_agreement
+        else:
+            raise Exception(f"agreement name '{agreement_name}' not available")
 
     def bleu_agreement(self, input, output_i, output_j):
         """
