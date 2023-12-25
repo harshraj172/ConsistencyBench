@@ -150,13 +150,13 @@ class Agreement:
         elif agreement_name.lower() == "bertscore":
             self.bertscore = evaluate.load("bertscore")
             self.agreement_fn = self.bertscore_agreement
-        elif agreement_name.lower() == "paraphrase_detector":
+        elif agreement_name.lower() == "paraphrase_detector": # TODO: deprecate
             self.pp_detector = PP_Detector()
             self.agreement_fn = self.pp_agreement
-        elif agreement_name.lower() == "entailment":
+        elif agreement_name.lower() == "entailment": # TODO: deprecate
             self.nli = NLI()
             self.agreement_fn = self.entailment_agreement
-        elif agreement_name.lower() == "contradiction":
+        elif agreement_name.lower() == "contradiction": # TODO: deprecate
             self.nli = NLI()
             self.agreement_fn = self.contradiction_agreement
         elif agreement_name.lower() == "ner":
@@ -284,7 +284,7 @@ class Agreement:
 
     def llm_agreement(self, input, output_i, output_j):
         """
-        Utilizes a large language model (LLM) to assess the agreement between two outputs based on a specific input.
+        Utilizes a LLM to assess the agreement between two outputs based on a specific input.
         This method involves two steps: first, it uses the LLM to process each output with the input;
         second, it compares the LLM-processed outputs to determine if they are in agreement.
 

@@ -1,1 +1,1 @@
-from .score import ConsistencyScorer
+from .scorer import ConsistencyScorer
