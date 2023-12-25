@@ -1,2 +1,2 @@
-from .a2c import A2CGenerator
 from .base import BaseGenerator
+from .cog import CoGGenerator

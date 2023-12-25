@@ -1,6 +1,5 @@
 import numpy as np
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 
 from .prompt_template import QUESTION_TEMPLATE
@@ -8,7 +7,7 @@ from .prompt_template import QUESTION_TEMPLATE
 
 class BaseGenerator:
     """
-    A base class for generating variations of outputs based on different methods.
+    Base class for generating variations of outputs based on different methods.
 
     Attributes:
         variation_type (str): Type of variation method used (e.g., 'sampling', 'paraphrasing').

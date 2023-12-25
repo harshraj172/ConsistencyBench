@@ -9,20 +9,17 @@ from .prompt_template import EVAL_STEP1_TEMPLATE, EVAL_STEP2_TEMPLATE
 
 class PP_Detector:
     """
-    This class implements a Paraphrase Detector using a fine-tuned model.
+    This class implements a Paraphrase Detector using a finetuned LLM. Currently, it uses [DeBERTa V3 finetuned on the PAWS dataset](https://huggingface.co/domenicrosati/deberta-v3-large-finetuned-paws-paraphrase-detector).
     It serves to assess if two given text segments are paraphrases of each other.
     The model outputs a score between 0 and 1, indicating the likelihood of the inputs being paraphrases.
 
     Attributes:
-        detection_tokenizer (AutoTokenizer): Tokenizer from the HuggingFace library,
-                                             initialized from a pre-trained model specified by `tok_path`.
-        detection_model (AutoModelForSequenceClassification): Model from the HuggingFace library,
-                                                              fine-tuned for paraphrase detection,
-                                                              loaded from `model_path`.
+        detection_tokenizer (AutoTokenizer): Hugging Face tokenizer, initialized from a pretrained model specified by `tok_path`.
+        detection_model (AutoModelForSequenceClassification): Hugging Face model fine-tuned for paraphrase detection, loaded from `model_path`.
 
     Methods:
         __init__(tok_path, model_path, max_len): Initializes the Paraphrase Detector.
-        score_binary(y_1, y_2): Calculates the paraphrase probability scores for two input sentences.
+        score_binary(sentence1, sentence2): Calculates the paraphrase probability scores for two input sentences.
 
     Parameters:
         tok_path (str): Path or identifier for the tokenizer to be used.
@@ -32,10 +29,11 @@ class PP_Detector:
         max_len (int): Maximum length of the tokenized input. Default value is 30.
 
     Example:
+        ```
         detector = PP_Detector()
         score_no_para, score_para = detector.score_binary("This is a sentence.", "This is another sentence.")
-        # `score_no_para` represents the probability of the inputs not being paraphrases,
-        # while `score_para` represents the probability of them being paraphrases.
+        ```
+        `score_no_para` represents the probability of the inputs not being paraphrases, while `score_para` represents the probability of them being paraphrases.
     """
 
     def __init__(
@@ -51,9 +49,20 @@ class PP_Detector:
         )
         self.detection_model.to("cuda")
 
-    def score_binary(self, y_1, y_2):
+    def score_binary(self, sentence1, sentence2):
+        """
+        Calculates the paraphrase probability scores for two input sentences.
+
+        Parameters:
+            sentence1 (str): The first sentence.
+            sentence2 (str): The second sentence.
+
+        Returns:
+            (float): Probabilities that the two sentences are not each other's paraphrases.
+            (float): Probabilities that the two sentences are each other's paraphrases.
+        """
         inputs = self.detection_tokenizer(
-            y_1, y_2, return_tensors="pt", padding=True
+            sentence1, sentence2, return_tensors="pt", padding=True
         ).to("cuda")
         outputs = self.detection_model(**inputs)
         scores = outputs.logits.softmax(dim=-1)
@@ -67,7 +76,7 @@ class NLI:
     each other or if one sentence entails the other.
 
     Parameters:
-        tokenizer_path (str): Path to the tokenizer.
+        tok_path (str): Path to the tokenizer.
         model_path (str): Path to the model.
         max_length (int): Maximum length of the input sequences.
     """
@@ -85,7 +94,7 @@ class NLI:
         )
         self.detection_model.to("cuda")
 
-    def entailed(self, y_1, y_2):
+    def entailed(self, sentence1, sentence2):
         """
         Determines if the first sentence entails the second.
 
@@ -94,16 +103,16 @@ class NLI:
             sentence2 (str): The second sentence.
 
         Returns:
-            float: Probability that sentence1 entails sentence2.
+            (float): Probability that sentence1 entails sentence2.
         """
         inputs = self.detection_tokenizer(
-            y_1, y_2, return_tensors="pt", padding=True
+            sentence1, sentence2, return_tensors="pt", padding=True
         ).to("cuda")
         outputs = self.detection_model(**inputs)
         scores = outputs.logits.softmax(dim=-1)
         return scores.T[2].item()
 
-    def contradicted(self, y_1, y_2):
+    def contradicted(self, sentence1, sentence2):
         """
         Determines if the first sentence contradicts the second.
 
@@ -112,10 +121,10 @@ class NLI:
             sentence2 (str): The second sentence.
 
         Returns:
-            float: Probability that sentence1 contradicts sentence2.
+            (float): Probability that sentence1 contradicts sentence2.
         """
         inputs = self.detection_tokenizer(
-            y_1, y_2, return_tensors="pt", padding=True
+            sentence1, sentence2, return_tensors="pt", padding=True
         ).to("cuda")
         outputs = self.detection_model(**inputs)
         scores = outputs.logits.softmax(dim=-1)
@@ -125,12 +134,12 @@ class NLI:
 class Agreement:
     """
     The Agreement class is designed to assess the similarity or agreement between two text outputs.
-    It supports various evaluation metrics such as BLEU, BERTScore, paraphrase detection, entailment,
-    contradiction, named entity recognition (NER), and large language model (LLM) based comparison.
+    It supports a number of evaluation metrics: BLEU, BERTScore, paraphrase detection, entailment,
+    contradiction, named entity recognition (NER), and LLM based comparison.
 
     Parameters:
-    agreement_name (str): The name of the agreement metric to use.
-    aux_model: An auxiliary model required for certain agreement metrics, particularly LLM.
+        agreement_name (str): The name of the agreement metric to use.
+        aux_model: An auxiliary LLM required for certain agreement metrics.
     """
 
     def __init__(self, agreement_name, aux_model):
@@ -174,17 +183,16 @@ class Agreement:
         else:
             raise Exception(f"agreement name '{agreement_name}' not available")
 
-    def bleu_agreement(self, input, output_i, output_j):
+    def bleu_agreement(self, output_i, output_j):
         """
         Calculates the BLEU score to evaluate the agreement between two text outputs.
 
         Parameters:
-        input: The input text based on which outputs are generated (not used in BLEU calculation).
-        output_i (str): The first output text to compare.
-        output_j (str): The second output text to compare.
+            output_i (str): The first output text to compare.
+            output_j (str): The second output text to compare.
 
         Returns:
-        float: The BLEU score indicating the similarity between output_i and output_j.
+            (float): The BLEU score indicating the similarity between output_i and output_j.
         """
         if not output_i:
             return 0
@@ -193,77 +201,72 @@ class Agreement:
         bleu_score = self.bleu.compute(predictions=[output_i], references=[output_j])
         return bleu_score["bleu"] or 0.0
 
-    def bertscore_agreement(self, input, output_i, output_j):
+    def bertscore_agreement(self, output_i, output_j):
         """
         Computes the BERTScore, a metric for evaluating the agreement between two textual outputs.
 
         Parameters:
-        input: The input text based on which outputs are generated (not used in BERTScore calculation).
-        output_i (str): The first output text for comparison.
-        output_j (str): The second output text for comparison.
+            output_i (str): The first output text for comparison.
+            output_j (str): The second output text for comparison.
 
         Returns:
-        float: The BERTScore representing the agreement between output_i and output_j.
+            (float): The BERTScore representing the agreement between output_i and output_j.
         """
         bertscore_score = self.bertscore.compute(
             predictions=[output_i], references=[output_j], lang="en"
         )
         return bertscore_score["f1"][0]
 
-    def pp_agreement(self, input, output_i, output_j):
+    def pp_agreement(self, output_i, output_j):
         """
         Uses a paraphrase detector to evaluate the agreement between two text outputs.
 
         Parameters:
-        input: The input text based on which outputs are generated (not used in paraphrase detection).
-        output_i (str): The first output text for comparison.
-        output_j (str): The second output text for comparison.
+            output_i (str): The first output text for comparison.
+            output_j (str): The second output text for comparison.
 
         Returns:
-        float: A score indicating whether the outputs are paraphrases of each other.
+            (float): A score indicating whether the outputs are paraphrases of each other.
         """
         pp_detector_score = self.pp_detector.score_binary(output_i, output_j)
         return pp_detector_score[1]
 
-    def entailment_agreement(self, input, output_i, output_j):
+    def entailment_agreement(self, output_i, output_j):
         """
         Assesses if one text output entails the other using a natural language inference model.
 
         Parameters:
-        input: The input text based on which outputs are generated (not directly used in entailment assessment).
-        output_i (str): The first output text for comparison.
-        output_j (str): The second output text for comparison.
+            output_i (str): The first output text for comparison.
+            output_j (str): The second output text for comparison.
 
         Returns:
-        float: A score indicating whether one output entails the other.
+            (float): A score indicating whether one output entails the other.
         """
         return self.nli.entailed(output_i, output_j)
 
-    def contradiction_agreement(self, input, output_i, output_j):
+    def contradiction_agreement(self, output_i, output_j):
         """
         Evaluates whether two text outputs contradict each other using a natural language inference model.
 
         Parameters:
-        input: The input text based on which outputs are generated (not directly used in contradiction assessment).
-        output_i (str): The first output text for comparison.
-        output_j (str): The second output text for comparison.
+            output_i (str): The first output text for comparison.
+            output_j (str): The second output text for comparison.
 
         Returns:
-        float: A score indicating whether one output contradicts the other.
+            (float): A score indicating whether one output contradicts the other.
         """
         return self.nli.contradicted(output_i, output_j)
 
-    def ner_agreement(self, input, output_i, output_j):
+    def ner_agreement(self, output_i, output_j):
         """
         Uses Named Entity Recognition (NER) to evaluate the agreement between two text outputs based on the matching entities.
 
         Parameters:
-        input: The input text based on which outputs are generated (not directly used in NER comparison).
-        output_i (str): The first output text for entity comparison.
-        output_j (str): The second output text for entity comparison.
+            output_i (str): The first output text for entity comparison.
+            output_j (str): The second output text for entity comparison.
 
         Returns:
-        float: A score based on the proportion of matching entities in the two outputs.
+            (float): A score based on the proportion of matching entities in the two outputs.
         """
         pro_texti = self.NER(output_i)
         pro_textj = self.NER(output_j)
@@ -286,12 +289,12 @@ class Agreement:
         second, it compares the LLM-processed outputs to determine if they are in agreement.
 
         Parameters:
-        input (str): The original input text based on which the outputs were generated.
-        output_i (str): The first output text for comparison.
-        output_j (str): The second output text for comparison.
+            input (str): The original input text based on which the outputs were generated.
+            output_i (str): The first output text for comparison.
+            output_j (str): The second output text for comparison.
 
         Returns:
-        int: Returns 1 if the LLM determines the outputs are in agreement based on the input, otherwise 0.
+            (int): Returns 1 if the LLM determines the outputs are in agreement based on the input, otherwise 0.
         """
         out1_step1 = self.chain_step1.run({"context": output_i, "question": input})
         out2_step1 = self.chain_step1.run({"context": output_j, "question": input})

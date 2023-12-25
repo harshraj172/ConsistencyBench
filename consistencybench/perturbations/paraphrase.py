@@ -2,16 +2,16 @@ from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 
-from .prompt_template import *
+from .prompt_template import PP_TEMPLATE
 
 
 def llm_prompting(input, method=1):
     """
-    Generate a paraphrase from input text using a language model (LM) based on a specified template.
+    Generate a paraphrase from input text using a language model (LLM) based on a specified template.
 
     Args:
         input_text (str): The text to be processed.
-        method (int, optional): The method number to be used for processing. Default is 1.
+        method (int, optional): The method number to be used for processing.
 
     Returns:
         str: The processed text output from the language model.

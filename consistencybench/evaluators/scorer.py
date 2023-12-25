@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import entropy
 
-from .agreements import Agreement
+from .metrics import Agreement
 
 
 def semantic_clustering(
@@ -13,27 +13,25 @@ def semantic_clustering(
     """
     Organizes similar items from a list into clusters based on a similarity threshold.
 
-    This function takes a list of items ('outs') and groups them into clusters.
+    This function takes a list of items (`outs`) and groups them into clusters.
     Each cluster contains items that are similar to each other based on a given similarity
-    measure ('agreement_fn'). The similarity is compared to a specified threshold to
+    measure (`agreement_fn`). The similarity is compared to a specified threshold to
     determine if items belong in the same cluster.
 
     Parameters:
-    - inp: A reference input that is used by the 'agreement_fn' to compare against items in 'outs'.
-    - outs: A list of items to be clustered.
-    - agreement_fn: A function that measures similarity between 'inp' and each item in 'outs',
-                    and between items within 'outs'. It should return a similarity score.
-    - threshold (optional): A float value representing the minimum similarity score required
-                            for items to be considered as part of the same cluster.
-                            Default value is 0.5.
+        inp (str): A reference input used by `agreement_fn` to compare against items in `outs`.
+        outs (List(str)): A list of items to be clustered.
+        agreement_fn: A function that measures similarity between `inp` and each item in `outs`, and between items within `outs`. Returns a similarity score.
+        threshold (float, optional): A float value representing the minimum similarity score requiredfor items to be considered as part of the same cluster. Default value is 0.5.
 
     Returns:
-    - A list of clusters, where each cluster is a list of items from 'outs' that are similar
-      to each other as per the 'agreement_fn' and above the 'threshold' value.
+        (List): A list of clusters, where each cluster is a list of items from 'outs' that are similar to each other as per the 'agreement_fn' and above the 'threshold' value.
 
     Example:
-    >>> semantic_clustering(input_item, list_of_items, similarity_function)
-    >>> [[item1, item2], [item3], [item4, item5, item6]]
+        ```
+        semantic_clustering(input_item, list_of_items, similarity_function)
+        > [[item1, item2], [item3], [item4, item5, item6]]
+        ```
     """
     C = [[outs[0]]]
     outs = outs[1:]
@@ -57,14 +55,14 @@ class ConsistencyScorer:
     A class to calculate consistency scores for a set of outputs based on a given input.
 
     Attributes:
-    - agreements_list (list): A list of tuples where each tuple contains an agreement function name and a threshold.
-    - scoring_type (str): Type of scoring method to use. Options are 'entropy' or 'pairwise'.
-    - aux_model: An auxiliary model used for calculating agreement scores.
+        - agreements_list (list): A list of tuples where each tuple contains an agreement function name and a threshold.
+        - scoring_type (str): Type of scoring method to use. Options are 'entropy' or 'pairwise'.
+        - aux_model: An auxiliary model used for calculating agreement scores.
 
     Methods:
-    - entropy_score: Calculates the entropy score for a given set of outputs.
-    - pairwise_score: Calculates the pairwise score for a given set of outputs.
-    - score: Calculates the consistency score based on the specified scoring type.
+        - entropy_score: Calculates the entropy score for a given set of outputs.
+        - pairwise_score: Calculates the pairwise score for a given set of outputs.
+        - score: Calculates the consistency score based on the specified scoring type.
     """
 
     def __init__(self, agreements_list, scoring_type, aux_model):
@@ -72,9 +70,9 @@ class ConsistencyScorer:
         Initializes the ConsistencyScorer with necessary parameters.
 
         Parameters:
-        - agreements_list (list): A list of agreement functions and thresholds.
-        - scoring_type (str): The type of scoring to be used.
-        - aux_model: An auxiliary model for agreement calculations.
+            - agreements_list (list): A list of agreement functions and thresholds.
+            - scoring_type (str): The type of scoring to be used.
+            - aux_model: An auxiliary model for agreement calculations.
         """
         super(ConsistencyScorer, self).__init__()
         self.agreements_list = agreements_list
@@ -86,13 +84,13 @@ class ConsistencyScorer:
         Calculates the entropy score for given outputs based on semantic clustering.
 
         Parameters:
-        - input: The input based on which outputs were generated.
-        - outputs (list): A list of generated outputs.
-        - agreement_fn: A function to calculate agreement between outputs.
-        - threshold: A threshold value for agreement.
+            - input: The input based on which outputs were generated.
+            - outputs (list): A list of generated outputs.
+            - agreement_fn: A function to calculate agreement between outputs.
+            - threshold: A threshold value for agreement.
 
         Returns:
-        - float: The entropy score.
+            - float: The entropy score.
         """
         # TODO
         # Add exact score via entropy estimate through Monte Carlo
@@ -107,14 +105,14 @@ class ConsistencyScorer:
         Calculates pairwise agreement score for given outputs.
 
         Parameters:
-        - input: The input based on which outputs were generated.
-        - outputs (list): A list of generated outputs.
-        - agreement_fn: Function to calculate agreement between two outputs.
-        - threshold: A threshold value for considering an agreement.
-        - binary (bool): If True, counts binary agreements; else adds up agreement scores.
+            - input: The input based on which outputs were generated.
+            - outputs (list): A list of generated outputs.
+            - agreement_fn: Function to calculate agreement between two outputs.
+            - threshold: A threshold value for considering an agreement.
+            - binary (bool): If True, counts binary agreements; else adds up agreement scores.
 
         Returns:
-        - float: The pairwise agreement score.
+            - float: The pairwise agreement score.
         """
         agreements = 0
         for i, output_i in enumerate(outputs):
@@ -135,11 +133,11 @@ class ConsistencyScorer:
         Calculates the consistency scores for the given outputs based on the scoring type.
 
         Parameters:
-        - input: The input based on which outputs were generated.
-        - outputs (list): A list of generated outputs.
+            - input: The input based on which outputs were generated.
+            - outputs (list): A list of generated outputs.
 
         Returns:
-        - dict: A dictionary of scores for each agreement function in agreements_list.
+            - dict: A dictionary of scores for each agreement function in agreements_list.
         """
         if self.scoring_type == "entropy":
             scorer = self.entropy_score

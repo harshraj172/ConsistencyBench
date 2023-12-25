@@ -59,9 +59,9 @@ if __name__ == "__main__":
         help="output consistency evaluation strategy to use",
     )
     args = parser.parse_args()
-    
-    os.environ['OPENAI_API_KEY'] = args.openai_api_key
-    
+
+    os.environ["OPENAI_API_KEY"] = args.openai_api_key
+
     if args.data_name == "truthful_qa":
         data = load_dataset("truthful_qa", "generation")
         df = data["validation"].to_pandas()
@@ -128,8 +128,7 @@ if __name__ == "__main__":
 
         if args.variation_type == "paraphrasing":
             input_perts = [
-                paraphrase.llm_prompting(input, method=idx)
-                for idx in range(1, 5)
+                paraphrase.llm_prompting(input, method=idx) for idx in range(1, 5)
             ]
         else:
             input_perts = []

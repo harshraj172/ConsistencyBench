@@ -1,3 +1,3 @@
-from .evaluate import *
-from .generate import *
-from .perturb import *
+from .evaluators import *
+from .generators import *
+from .perturbations import *

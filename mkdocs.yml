@@ -1,39 +1,66 @@
 site_name: ConsistencyBench
-#site_url: https://geico.visualstudio.com/ML%20and%20DS%20Capabilities/_git/RAIModelDiagnosis
+site_url: https://github.com/harshraj172/ConsistencyBench
 nav:
   - Home: index.md
-  - UserGuide: userguide.md
-  # - Packages:
-  #     - Classification: classification.md
-  #     - Regression: regression.md
-  - About: about.md
+  - User Guide: userguide.md
+  - Modules:
+      - Generators:
+        - Base Generator: generators/base.md
+        - Chain-of-Guidance: generators/cog.md
+      - Perturbations:
+        - Paraphrasing: perturbations/paraphrase.md
+      - Evaluators:
+        - Metrics: evaluators/metrics.md
+        - Scorer: evaluators/scorer.md
+  # - About: about.md
+
 theme:
-  name: readthedocs
+  name: material
+  # name: gitbook
+  features:
+  - navigation.instant
+  - navigation.expand
+  # - navigation.tabs
+  # - navigation.sections
+  - toc.integrate
+  # - navigation.top
+  - search.suggest
+  # - search.highlight
+  - content.tabs.link
+  - content.code.annotation
+  - content.code.copy
 
 plugins:
+  - search
   - mkdocstrings
+  # - mkdocstrings:
+  #     default_handler: python
+  #     handlers:
+  #       python:
+  #         paths: [src]
 
-#  features:
-#    - navigation.tabs
-#    - navigation.sections
-#    - toc.integrate
-#    - navigation.top
-#    - search.suggest
-#    - search.highlight
-#    - content.tabs.link
-#    - content.code.annotation
-#    - content.code.copy
-#  language: en
-#  palette:
-#    - scheme: default
-#      toggle:
-#        icon: material/toggle-switch-off-outline
-#        name: Switch to dark mode
-#      primary: teal
-#      accent: purple
-#    - scheme: slate
-#      toggle:
-#        icon: material/toggle-switch
-#        name: Switch to light mode
-#      primary: teal
-#      accent: lime
+#   - navigation.tabs
+#   - navigation.sections
+#   - toc.integrate
+#   - navigation.top
+#   - search.suggest
+#   - search.highlight
+#   - content.tabs.link
+#   - content.code.annotation
+#   - content.code.copy
+
+# language: en
+
+# palette:
+#   - scheme: default
+#     toggle:
+#       icon: material/toggle-switch-off-outline
+#       name: Switch to dark mode
+#     primary: teal
+#     accent: purple
+#   - scheme: slate
+#     toggle:
+#       icon: material/toggle-switch
+#       name: Switch to light mode
+#     primary: teal
+#     accent: lime

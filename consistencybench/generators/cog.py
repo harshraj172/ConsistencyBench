@@ -1,17 +1,16 @@
 import re
 import numpy as np
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatOpenAI
 from langchain.chains import LLMChain
 
 from .prompt_template import QUESTION_TEMPLATE
 from .base import BaseGenerator
 
 
-class A2CGenerator(BaseGenerator):
+class CoGGenerator(BaseGenerator):
     """
-    A specialized generator class extending BaseGenerator, designed to create
-    multiple choice options based on input variations.
+    Implements Chain-of-Guidance prompting, designed to create
+    multiple-choice options based on input variations.
 
     Inherits from:
         BaseGenerator: The base class for generating output variations.
@@ -19,13 +18,13 @@ class A2CGenerator(BaseGenerator):
 
     def __init__(self, model, variation_type):
         """
-        Initializes the A2CGenerator with the given model and variation type.
+        Initializes the CoGGenerator with the given model and variation type.
 
         Args:
             model (Model): The language model to use.
             variation_type (str): The method of variation to apply ('sampling' or 'paraphrasing').
         """
-        super(A2CGenerator, self).__init__(model, variation_type)
+        super(CoGGenerator, self).__init__(model, variation_type)
         self.variation_type = variation_type
         self.model = model
         self.question_prompt = PromptTemplate(
