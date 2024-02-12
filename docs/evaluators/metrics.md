@@ -6,14 +6,4 @@ ConsistencyBench contains three classes of metrics to measure semantic similarit
 2. Based on Natural Language Inference (`NLI`)
 3. Through agreement-based notions of similarity, such as BLEU and BERTScore (`Agreement`)
 
-## `PP_Detector`
-
-::: consistencybench.evaluators.metrics.PP_Detector
-
-## `NLI`
-
-::: consistencybench.evaluators.metrics.NLI
-
-## `Agreement`
-
-::: consistencybench.evaluators.metrics.Agreement
+::: consistencybench.evaluators.metrics

@@ -133,6 +133,8 @@ class NLI:
 
 class Agreement:
     """
+    TODO: edit to clarify this is an umbrella class for all agreement metrics, including above
+    
     The Agreement class is designed to assess the similarity or agreement between two text outputs.
     It supports a number of evaluation metrics: BLEU, BERTScore, paraphrase detection, entailment,
     contradiction, named entity recognition (NER), and LLM based comparison.
