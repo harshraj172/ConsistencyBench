@@ -1,5 +1,4 @@
-EVAL_STEP1_TEMPLATE = \
-"""
+EVAL_STEP1_TEMPLATE = """
 Context: The answer to this question depends on the circumstances. Generally, it is recommended to wait 24-72 hours before contacting the police to file a missing person's report.
 Question: How much hour to wait before contacting the police.
 Answer: 24-72 hours.
@@ -33,8 +32,7 @@ Question: {question}
 Answer:"""
 
 
-EVAL_STEP2_TEMPLATE = \
-"""
+EVAL_STEP2_TEMPLATE = """
 Question: How much hour to wait before contacting the police?
 Answer 1: As soon as possible.
 Answer 2: 24-72 hours.
@@ -44,7 +42,7 @@ No
 Question: What do matadors do with red capes?
 Answer 1: Wave to anger and distract the bull.
 Answer 2: Irritate and focus the bull's attention.
-Are both of the answers same? 
+Are both of the answers same?
 No
 
 Question: What happens if you eat watermelon seeds?
@@ -61,7 +59,7 @@ No
 
 Question: How fast would a penny dropped from the Empire State Building be traveling?
 Answer 1: 125 mph.
-Answer 2: 165 mph. 
+Answer 2: 165 mph.
 Are both of the answers same?
 No
 
@@ -76,4 +74,3 @@ Answer 1: {answer1}
 Answer 2: {answer2}
 Are both of the answers same?
 """
-     
